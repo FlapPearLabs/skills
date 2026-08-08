@@ -39,7 +39,16 @@ Give each ticket its **blocking edges** — the other tickets that must complete
 
 **Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change — rename a column, retype a shared symbol — whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket — green is promised only there.
 
-### 4. Quiz the user
+### 4. Validate the batch
+
+Before asking the user to approve the breakdown, validate the set as a batch — a ticket can look correct in isolation while the batch is not executable as a graph:
+
+- **Dependency audit.** Walk the blocking graph in topological order. Each ticket must be implementable and independently verifiable using only the base state and the outputs of its declared blockers. An acceptance criterion must not depend on a future or undeclared ticket — if it does, add the real blocking edge or move the criterion to the ticket that owns that behaviour.
+- **Source-contract audit.** Check both directions: every normative source requirement has an explicit disposition (implemented by ticket / already satisfied / prerequisite / deferral), and every ticket requirement traces back to the source. Do not invent thresholds, policies, algorithms, or product behaviour while making tickets more concrete — if the source says "measure", a ticket must not upgrade to "fail if it exceeds a threshold I invented".
+- **Constraint audit.** Each ticket's allowed changes, produced artifacts, and hard constraints (security, privacy, licensing) must be satisfiable at once.
+- **Fix, don't publish.** Cycles, hidden dependencies, coverage gaps, and contradictory constraints are fixed in the tickets before the breakdown is presented.
+
+### 5. Quiz the user
 
 Present the proposed breakdown as a numbered list. For each ticket, show:
 
@@ -55,7 +64,7 @@ Ask the user:
 
 Iterate until the user approves the breakdown.
 
-### 5. Publish the tickets to the configured tracker
+### 6. Publish the tickets to the configured tracker
 
 Publish the approved tickets. **How** depends on the tracker `/setup-matt-pocock-skills` configured — the tickets are the same either way, only the shape of the blocking edges changes:
 

@@ -28,7 +28,13 @@ A **horizontal** slice ships one layer of the change. Nothing works until every 
 
 This is the rule people break most often, and the consequences are well documented. One team ran a 26-ticket stack sliced by layer — corpus, producer, aggregator, selector — and got roughly twenty agent runs per closed ticket, about three quarters of them rework. Their own post-mortem traced every failure class back to the horizontal slicing rather than to the implementations.
 
-Two things happen before anything is published. `to-tickets` looks for prefactoring — "make the change easy, then make the easy change" — and orders that work first. Then it presents the breakdown as a numbered list and quizzes you on it: is the granularity right, are the blocking edges real, should anything merge or split. Nothing reaches the tracker until you approve, and that quiz is the place to push back.
+Three things happen before anything is published. `to-tickets` looks for prefactoring — "make the change easy, then make the easy change" — and orders that work first. Then it validates the breakdown **as a batch** (below), and finally presents it as a numbered list and quizzes you on it: is the granularity right, are the blocking edges real, should anything merge or split. Nothing reaches the tracker until the batch check passes and you approve; the quiz is the place to push back on shape, the batch check is the place to catch tickets that are only correct in isolation.
+
+## Validating the batch
+
+Per-ticket correctness does not guarantee batch correctness. A ticket can read as fine on its own while the set fails as a dependency graph — an acceptance criterion that quietly needs a mechanism a parallel ticket will build, a threshold the source spec never approved, or an allowed artifact that collides with the ticket's own safety constraints.
+
+Before the quiz, `to-tickets` walks the blocking graph in dependency order and checks, per ticket: it can be built and independently verified from the base state plus its declared blockers alone; its acceptance criteria don't reach into a future or undeclared ticket (fix by adding the real edge or moving the criterion); every normative source requirement has an explicit disposition and every ticket requirement traces back to the source; and its allowed changes, produced artifacts, and hard constraints can all be satisfied at once. Problems are fixed in the tickets, not published around. For a two-ticket batch this is a quick check; for a large graph it is a real simulation. It adds no fields to the ticket template and no coverage spreadsheet to maintain.
 
 ## Blocking edges
 
@@ -74,7 +80,7 @@ They did, and that was a bug — a single shared file also raced when parallel a
 A very large spec can outgrow what a tracker issue serves back cleanly, and there is no local copy to fall back on — the agent then burns [tool calls](https://www.aihero.dev/ai-coding-dictionary/tool-call) re-fetching chunks and never reaches the end. Don't [clear](https://www.aihero.dev/ai-coding-dictionary/clearing) or [compact](https://www.aihero.dev/ai-coding-dictionary/compaction) between `/to-spec` and `/to-tickets`. Run them in the same context window and the spec never has to be fetched back at all.
 
 **The acceptance criteria graded nothing — some passed before any work was done.**
-The template asks for criteria and says nothing about whether they can fail, so this happens. Three shapes recur: a criterion already true at the base commit, a criterion that can only be satisfied by work another ticket owns, and one that restates the request rather than deriving from the artifact. Vertical slicing prevents most of it — a slice that delivers behaviour which didn't exist before is red at the base commit by construction — but the check is worth doing by hand. For each criterion, name the observation that would show it false, and confirm it fails at the commit the implementer starts from.
+The template asks for criteria and says nothing about whether they can fail, so this happens. Three shapes recur: a criterion already true at the base commit, a criterion that can only be satisfied by work another ticket owns, and one that restates the request rather than deriving from the artifact. Vertical slicing prevents most of it — a slice that delivers behaviour which didn't exist before is red at the base commit by construction — but the check is worth doing by hand. For each criterion, name the observation that would show it false, and confirm it fails at the commit the implementer starts from. The batch-validation step now catches the middle shape before anything is published — a criterion that can only be satisfied by work another ticket owns surfaces as a hidden dependency when the graph is walked in order.
 
 **The tickets are published. How do I actually run them?**
 The skill stops at the artifact, and there is no auto-dispatch mode. Dispatch is manual: look at the board, count the tickets with no open blockers, and open that many agent sessions. One ticket per fresh context, cleared between them. Be aware that [implement](https://aihero.dev/skills-implement) does not reliably close or check off the ticket when it finishes, on GitHub or in local markdown, so the ticket's state is yours to update.
@@ -87,6 +93,7 @@ The skill stops at the artifact, and there is no auto-dispatch mode. Dispatch is
 - Nothing in a ticket body is a file path or a line number, except a snippet a prototype produced.
 - Each ticket reads like something a fresh session could finish without you in the room.
 - Prefactoring, where it found any, is at the front of the order rather than mixed into feature tickets.
+- The blocking edges in the published tickets match the dependencies their acceptance criteria imply.
 
 ## Where it fits
 
