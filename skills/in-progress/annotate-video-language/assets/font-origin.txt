@@ -1,0 +1,3 @@
+Source: https://github.com/google/fonts/tree/main/ofl/notosanssc
+Derived from Noto Sans SC variable font, instantiated at weight 400, subset to GB2312 plus Latin and general punctuation, renamed VideoNotes SC.
+License: SIL Open Font License 1.1; see OFL.txt.

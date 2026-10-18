@@ -85,6 +85,10 @@ Off the main flow entirely.
 - **`/teach`** — learn a concept over multiple sessions, using the current directory as a stateful workspace.
 - **`/writing-for-agents`** — reference for writing documents agents consume: skills, AGENTS.md, pointed-at docs.
 
+## 本仓库的试用技能
+
+- **`/annotate-video-language`** — 用户上传 AI 动画、探店或真实拍摄视频，希望看懂景别、运镜、剪切、转场和衔接，并把画面翻译为生成描述及剪辑指令时，使用 [镜头与剪辑标注助手](../../in-progress/annotate-video-language/SKILL.md)。这是本仓库手动收录的试用技能，需单独安装，不包含于当前插件。模型或用户均可调用；它需要实际查看连续画面，不提供独立视觉模型，也不保证云端能打开用户本机播放器。
+
 ## Precondition
 
 **`/setup-matt-pocock-skills`** — run before your first engineering flow to configure the issue tracker, triage labels, and doc layout the other skills assume. Custom issue trackers also work.
